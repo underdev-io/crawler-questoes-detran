@@ -1,6 +1,5 @@
+import parseData from "./crawler";
 import fastify from "fastify";
-import scrap from "./crawler";
-
 const app = fastify ({logger: true});
 
 async function run() {
@@ -17,9 +16,9 @@ async function run() {
 
 
 app.get("/",async(req,res)=> {
- scrap();
+ //scrap();
 });
-    scrap();
+    parseData();
 
 run().catch((err) => console.log(err));
 
