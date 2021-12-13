@@ -1,37 +1,36 @@
-import parseData from "./crawler";
 import fastify from "fastify";
-const app = fastify ({logger: true});
+import cheerio from "cheerio";
 
-async function run() {
-    console.log(process.env.NODE_ENV);
-    try {
-        await app.listen(8000,"0.0.0.0");
-        console.log(' 🧲 recipeBot is running ');
-    }   catch(err){
-        app.log.error(err);
-        process.exit(1);
-    }
-}
+const json = require("./detran.json");
 
+const app = fastify({ logger: true });
 
+app.get("/", async (req, res) => {
+  const response = {
+    questions: [] as any,
+  };
+  const $ = cheerio.load(json.content);
 
-app.get("/",async(req,res)=> {
- //scrap();
+  $(".wpProQuiz_listItem").each(function (index, element) {
+    const title = $(element).find(".wpProQuiz_question_text").text().trim();
+
+    console.log("title", title);
+
+    response.questions.push({
+      title,
+    });
+  });
+
+  return response;
 });
-    parseData();
 
-run().catch((err) => console.log(err));
+const start = async () => {
+  try {
+    await app.listen(3000);
+  } catch (err) {
+    app.log.error(err);
+    process.exit(1);
+  }
+};
 
-
-
-
-
-
-
-
-
-
-
-
-
-export default app;
+start();
