@@ -2,8 +2,10 @@
 
 import fastify from 'fastify';
 import cheerio from 'cheerio';
+import fs from 'fs';
 
-const json = require('./detran.json');
+const json = require('./rawData/detran7.json');
+//const simulado = require('./exams/simulado1.json');
 
 const app = fastify({ logger: true });
 
@@ -11,6 +13,7 @@ app.get('/', async (req, res) => {
 	const response = {
 		questions: [] as any,
 	};
+
 	const $ = cheerio.load(json.content);
 
 	$('.wpProQuiz_listItem').each(function (index, element) {
@@ -44,6 +47,12 @@ app.get('/', async (req, res) => {
 			alternatives,
 			correctOption,
 		});
+	});
+
+	const responseJson = JSON.stringify(response);
+	fs.writeFile('src/exams/exam7.json', responseJson, 'utf8', function (err) {
+		if (err) console.log(err);
+		else console.log('data was saved!');
 	});
 
 	return response;
