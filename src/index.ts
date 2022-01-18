@@ -1,70 +1,70 @@
-/** @format */
+import fastify from "fastify";
+import cheerio from "cheerio";
+import fs from "fs";
 
-import fastify from 'fastify';
-import cheerio from 'cheerio';
-import fs from 'fs';
-
-const json = require('./rawData/detran7.json');
-//const simulado = require('./exams/simulado1.json');
+const json = require("./rawData/detran7.json");
 
 const app = fastify({ logger: true });
 
-app.get('/', async (req, res) => {
-	const response = {
-		questions: [] as any,
-	};
+app.get("/", async (req, res) => {
+  const response = {
+    questions: [] as any,
+  };
 
-	const $ = cheerio.load(json.content);
+  const $ = cheerio.load(json.content);
 
-	$('.wpProQuiz_listItem').each(function (index, element) {
-		const title = $(element).find('.wpProQuiz_question_text').text().trim();
+  $(".wpProQuiz_listItem").each(function (index, element) {
+    const title = $(element).find(".wpProQuiz_question_text").text().trim();
+    const image = $(element).find(".wpProQuiz_question_text img").attr("src");
 
-		let alternatives = $(element)
-			.find('.wpProQuiz_questionList')
-			.text()
-			.split('  ');
-		alternatives = alternatives.map((option) => {
-			let validOption = [];
-			if (option.includes('.')) validOption.push(option);
-			return validOption.toString().replace('.', '').trim();
-		});
-		alternatives = alternatives.filter((notNullQuestion: any) => {
-			return notNullQuestion;
-		});
+    let alternatives = $(element)
+      .find(".wpProQuiz_questionList")
+      .text()
+      .split("  ");
 
-		let questionId: any = $(element)
-			.find('.wpProQuiz_questionList')
-			.data('question_id');
-		let correctOption = json.json[questionId].correct;
-		correctOption = correctOption.indexOf(1) + 1;
+    alternatives = alternatives.map((option) => {
+      let validOption = [];
+      if (option.includes(".")) validOption.push(option);
+      return validOption.toString().replace(".", "").trim();
+    });
+    alternatives = alternatives.filter((notNullQuestion: any) => {
+      return notNullQuestion;
+    });
 
-		console.log('title', title);
-		console.log('alternative', alternatives);
-		console.log('correctOption', correctOption);
+    let questionId: any = $(element)
+      .find(".wpProQuiz_questionList")
+      .data("question_id");
+    let correctOption = json.json[questionId].correct;
+    correctOption = correctOption.indexOf(1) + 1;
 
-		response.questions.push({
-			title,
-			alternatives,
-			correctOption,
-		});
-	});
+    console.log("title", title);
+    console.log("alternative", alternatives);
+    console.log("correctOption", correctOption);
 
-	const responseJson = JSON.stringify(response);
-	fs.writeFile('src/exams/exam7.json', responseJson, 'utf8', function (err) {
-		if (err) console.log(err);
-		else console.log('data was saved!');
-	});
+    response.questions.push({
+      title,
+      alternatives,
+      correctOption,
+      image: !!image ? image : undefined,
+    });
+  });
 
-	return response;
+  const responseJson = JSON.stringify(response);
+  fs.writeFile("src/exams/exam7.json", responseJson, "utf8", function (err) {
+    if (err) console.log(err);
+    else console.log("data was saved!");
+  });
+
+  return response;
 });
 
 const start = async () => {
-	try {
-		await app.listen(3000);
-	} catch (err) {
-		app.log.error(err);
-		process.exit(1);
-	}
+  try {
+    await app.listen(3000);
+  } catch (err) {
+    app.log.error(err);
+    process.exit(1);
+  }
 };
 
 start();
